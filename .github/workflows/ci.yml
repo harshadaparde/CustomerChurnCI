@@ -1,0 +1,41 @@
+name: Customer Churn ML CI
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+     branches:
+       - main
+jobs:
+  test-and-train:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+           python-version: "3.12"
+      - name: Install dependencies
+        run:
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run unit tests
+        run: python -m pytest -v 
+
+      - name: Train and evaluate model
+        run: python -m src.train
+
+      - name: Upload trained model
+        if: success()
+        uses: actions/upload-artifact@v4 
+        with:
+           name: customer-churn-model
+           path:
+              models/churn_model.joblib
+              models/metrics.json
+           if-no-files-found: error
+           retention-days: 30                             
